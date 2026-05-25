@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>博弈论核心概念</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e0e0e6;
+    --muted: #8888a0;
+    --accent: #6c9bff;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --accent4: #f59e0b;
+    --accent5: #f472b6;
+    --red: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 1rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin: 2.5rem 0 1.2rem;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  h2 .icon { font-size: 1.3rem; }
+
+  /* Concept Map */
+  .concept-map {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0 2.5rem;
+    overflow-x: auto;
+  }
+
+  .concept-map svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.2rem;
+    margin: 1rem 0;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.4rem;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: #fff;
+  }
+
+  .card-en {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+  }
+
+  .card-insight {
+    font-size: 0.92rem;
+    color: var(--text);
+    margin-bottom: 0.8rem;
+    padding-left: 0.8rem;
+    border-left: 2px solid var(--accent2);
+  }
+
+  .card-example {
+    background: rgba(108, 155, 255, 0.06);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+
+  .card-example strong {
+    color: var(--accent3);
+    font-weight: 600;
+  }
+
+  /* Payoff Matrix */
+  .matrix-wrap {
+    overflow-x: auto;
+    margin: 0.6rem 0;
+  }
+
+  .matrix {
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    min-width: 280px;
+  }
+
+  .matrix th, .matrix td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.8rem;
+    text-align: center;
+  }
+
+  .matrix th {
+    background: rgba(108, 155, 255, 0.1);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .matrix .nash {
+    background: rgba(52, 211, 153, 0.1);
+    color: var(--accent3);
+    font-weight: 600;
+  }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    margin-right: 0.3rem;
+    font-weight: 500;
+  }
+
+  .tag-blue { background: rgba(108,155,255,0.15); color: var(--accent); }
+  .tag-purple { background: rgba(167,139,250,0.15); color: var(--accent2); }
+  .tag-green { background: rgba(52,211,153,0.15); color: var(--accent3); }
+  .tag-amber { background: rgba(245,158,11,0.15); color: var(--accent4); }
+  .tag-pink { background: rgba(244,114,182,0.15); color: var(--accent5); }
+
+  /* Theorem Section */
+  .theorem-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .theorem {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent4);
+    border-radius: 0 8px 8px 0;
+    padding: 1.2rem 1.4rem;
+  }
+
+  .theorem-name {
+    font-weight: 600;
+    color: var(--accent4);
+    margin-bottom: 0.3rem;
+  }
+
+  .theorem-content {
+    font-size: 0.92rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .theorem-example {
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding-left: 0.8rem;
+    border-left: 2px solid var(--border);
+  }
+
+  /* TOC */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.6rem;
+    margin-bottom: 2rem;
+  }
+
+  .toc-title {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.6rem;
+  }
+
+  .toc a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.92rem;
+    display: inline-block;
+    margin-right: 1.5rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .toc a:hover { text-decoration: underline; }
+
+  /* Footer */
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>博弈论 Game Theory</h1>
+<p class="subtitle">经典博弈模型 / 核心概念 / 重要定理 &mdash; 每个概念附带直觉案例</p>
+
+<nav class="toc">
+  <div class="toc-title">目录</div>
+  <a href="#map">概念关系图</a>
+  <a href="#classic">经典博弈模型</a>
+  <a href="#core">核心概念</a>
+  <a href="#theorems">经典定理与悖论</a>
+</nav>
+
+<!-- ============ CONCEPT MAP ============ -->
+<h2 id="map"><span class="icon">&#9741;</span> 概念关系图</h2>
+<div class="concept-map">
+<svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#34d399"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a78bfa"/>
+    </marker>
+  </defs>
+
+  <!-- Edges -->
+  <!-- Nash Equilibrium -> Dominant Strategy -->
+  <line x1="480" y1="95" x2="255" y2="155" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="350" y="118" fill="#666" font-size="11">特例</text>
+
+  <!-- Nash -> Mixed Strategy -->
+  <line x1="480" y1="95" x2="705" y2="155" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="600" y="118" fill="#666" font-size="11">推广</text>
+
+  <!-- Nash -> Pareto -->
+  <line x1="545" y1="95" x2="705" y2="250" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arrow-purple)"/>
+  <text x="640" y="168" fill="#a78bfa" font-size="11">可能冲突</text>
+
+  <!-- Nash -> Subgame Perfect -->
+  <line x1="420" y1="95" x2="255" y2="250" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="305" y="168" fill="#666" font-size="11">精炼</text>
+
+  <!-- Subgame Perfect -> Backward Induction -->
+  <line x1="180" y1="290" x2="180" y2="365" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <text x="188" y="335" fill="#34d399" font-size="11">求解方法</text>
+
+  <!-- Mechanism Design -> Nash -->
+  <line x1="480" y1="365" x2="480" y2="105" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arrow-purple)"/>
+  <text x="488" y="240" fill="#a78bfa" font-size="11">反向设计均衡</text>
+
+  <!-- Signaling -> Mixed Strategy -->
+  <line x1="705" y1="380" x2="740" y2="200" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="738" y="295" fill="#666" font-size="11">信息不对称</text>
+
+  <!-- Classic Games cluster -->
+  <!-- Prisoner -> Nash -->
+  <path d="M 160 510 Q 300 440 430 105" stroke="#34d399" stroke-width="1.2" fill="none" stroke-dasharray="4,4" marker-end="url(#arrow-green)"/>
+  <text x="260" y="440" fill="#34d399" font-size="10">占优策略均衡</text>
+
+  <!-- Chicken -> Mixed -->
+  <path d="M 370 510 Q 550 430 710 200" stroke="#34d399" stroke-width="1.2" fill="none" stroke-dasharray="4,4" marker-end="url(#arrow-green)"/>
+  <text x="530" y="430" fill="#34d399" font-size="10">混合策略均衡</text>
+
+  <!-- Centipede -> Backward Induction -->
+  <line x1="760" y1="510" x2="240" y2="410" stroke="#34d399" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#arrow-green)"/>
+  <text x="490" y="478" fill="#34d399" font-size="10">逆向归纳求解</text>
+
+  <!-- Nodes: Core Concepts (top area) -->
+  <rect x="390" y="55" rx="8" width="180" height="50" fill="#1e2230" stroke="#6c9bff" stroke-width="2"/>
+  <text x="480" y="85" text-anchor="middle" fill="#6c9bff" font-size="14" font-weight="600">纳什均衡</text>
+
+  <rect x="110" y="145" rx="8" width="170" height="50" fill="#1e2230" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="195" y="175" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="600">占优策略</text>
+
+  <rect x="660" y="145" rx="8" width="170" height="50" fill="#1e2230" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="745" y="175" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="600">混合策略</text>
+
+  <rect x="100" y="245" rx="8" width="190" height="50" fill="#1e2230" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="195" y="275" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="600">子博弈完美均衡</text>
+
+  <rect x="650" y="235" rx="8" width="190" height="50" fill="#1e2230" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="745" y="265" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="600">帕累托最优</text>
+
+  <rect x="100" y="370" rx="8" width="170" height="50" fill="#1e2230" stroke="#34d399" stroke-width="1.5"/>
+  <text x="185" y="400" text-anchor="middle" fill="#34d399" font-size="13" font-weight="600">逆向归纳</text>
+
+  <rect x="390" y="355" rx="8" width="180" height="50" fill="#1e2230" stroke="#f472b6" stroke-width="1.5"/>
+  <text x="480" y="385" text-anchor="middle" fill="#f472b6" font-size="13" font-weight="600">机制设计</text>
+
+  <rect x="630" y="355" rx="8" width="170" height="50" fill="#1e2230" stroke="#f472b6" stroke-width="1.5"/>
+  <text x="715" y="385" text-anchor="middle" fill="#f472b6" font-size="13" font-weight="600">信号博弈</text>
+
+  <!-- Classic Games (bottom) -->
+  <rect x="60" y="500" rx="20" width="120" height="36" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+  <text x="120" y="523" text-anchor="middle" fill="#34d399" font-size="12">囚徒困境</text>
+
+  <rect x="220" y="500" rx="20" width="120" height="36" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+  <text x="280" y="523" text-anchor="middle" fill="#34d399" font-size="12">懦夫博弈</text>
+
+  <rect x="380" y="500" rx="20" width="120" height="36" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+  <text x="440" y="523" text-anchor="middle" fill="#34d399" font-size="12">猎鹿博弈</text>
+
+  <rect x="540" y="500" rx="20" width="120" height="36" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+  <text x="600" y="523" text-anchor="middle" fill="#34d399" font-size="12">性别之战</text>
+
+  <rect x="700" y="500" rx="20" width="120" height="36" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+  <text x="760" y="523" text-anchor="middle" fill="#34d399" font-size="12">蜈蚣博弈</text>
+
+  <!-- Legend -->
+  <rect x="30" y="565" rx="6" width="900" height="40" fill="rgba(255,255,255,0.02)" stroke="var(--border)" stroke-width="0.5"/>
+  <line x1="60" y1="585" x2="100" y2="585" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="108" y="589" fill="#888" font-size="11">推导/特化</text>
+  <line x1="230" y1="585" x2="270" y2="585" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arrow-purple)"/>
+  <text x="278" y="589" fill="#888" font-size="11">张力/对立</text>
+  <line x1="410" y1="585" x2="450" y2="585" stroke="#34d399" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#arrow-green)"/>
+  <text x="458" y="589" fill="#888" font-size="11">经典博弈的均衡类型</text>
+  <rect x="660" y="575" rx="4" width="14" height="14" fill="#1e2230" stroke="#6c9bff" stroke-width="2"/>
+  <text x="682" y="589" fill="#888" font-size="11">核心均衡概念</text>
+  <rect x="800" y="575" rx="10" width="14" height="14" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+  <text x="822" y="589" fill="#888" font-size="11">经典博弈</text>
+</svg>
+</div>
+
+<!-- ============ CLASSIC GAMES ============ -->
+<h2 id="classic"><span class="icon">&#9876;</span> 经典博弈模型</h2>
+
+<div class="card-grid">
+
+  <!-- Prisoner's Dilemma -->
+  <div class="card">
+    <div class="card-title">囚徒困境</div>
+    <div class="card-en">Prisoner's Dilemma &nbsp;<span class="tag tag-blue">同时博弈</span><span class="tag tag-amber">占优策略</span></div>
+    <div class="card-insight">每个人都有「背叛」的占优策略，但双方都背叛的结果比双方都合作更差 &mdash; 个体理性 &ne; 集体理性。</div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <tr><th></th><th>对方沉默</th><th>对方背叛</th></tr>
+        <tr><th>我沉默</th><td>-1, -1</td><td>-10, 0</td></tr>
+        <tr><th>我背叛</th><td>0, -10</td><td class="nash">-5, -5 &#9733;</td></tr>
+      </table>
+    </div>
+    <div class="card-example">
+      <strong>例：</strong>两家航空公司都想降价抢客，结果双方都降到成本线，利润全无。如果能达成默契保持高价，双方都能赚更多 &mdash; 但谁先降价谁先抢到市场，所以降价是占优策略。
+    </div>
+  </div>
+
+  <!-- Chicken Game -->
+  <div class="card">
+    <div class="card-title">懦夫博弈</div>
+    <div class="card-en">Chicken Game &nbsp;<span class="tag tag-blue">同时博弈</span><span class="tag tag-purple">混合策略</span></div>
+    <div class="card-insight">没有占优策略。两个纯策略纳什均衡（一方让一方不让），谁先表现出"不可能退让"的承诺，谁就占优。</div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <tr><th></th><th>对方转向</th><th>对方直行</th></tr>
+        <tr><th>我转向</th><td>0, 0</td><td class="nash">-1, +1 &#9733;</td></tr>
+        <tr><th>我直行</th><td class="nash">+1, -1 &#9733;</td><td>-10, -10</td></tr>
+      </table>
+    </div>
+    <div class="card-example">
+      <strong>例：</strong>冷战时期美苏古巴导弹危机。双方都部署核武器互相威胁，谁先退让谁"丢面子"，但都不退让就是核战争。最终赫鲁晓夫先撤回导弹（转向），肯尼迪秘密撤回土耳其导弹作为交换。
+    </div>
+  </div>
+
+  <!-- Stag Hunt -->
+  <div class="card">
+    <div class="card-title">猎鹿博弈</div>
+    <div class="card-en">Stag Hunt &nbsp;<span class="tag tag-blue">同时博弈</span><span class="tag tag-green">协调博弈</span></div>
+    <div class="card-insight">合作猎鹿收益最高，但需要信任对方也会合作；单独猎兔更安全但收益低。信任 vs 安全的权衡。</div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <tr><th></th><th>对方猎鹿</th><th>对方猎兔</th></tr>
+        <tr><th>我猎鹿</th><td class="nash">5, 5 &#9733;</td><td>0, 3</td></tr>
+        <tr><th>我猎兔</th><td>3, 0</td><td class="nash">3, 3 &#9733;</td></tr>
+      </table>
+    </div>
+    <div class="card-example">
+      <strong>例：</strong>创业团队中，所有人全力投入（猎鹿）才能做出好产品；但如果我全力投入而其他人摸鱼，我损失最大。安全的选择是自己也留后路（猎兔），但大家都留后路，项目就平庸了。
+    </div>
+  </div>
+
+  <!-- Battle of the Sexes -->
+  <div class="card">
+    <div class="card-title">性别之战</div>
+    <div class="card-en">Battle of the Sexes &nbsp;<span class="tag tag-blue">同时博弈</span><span class="tag tag-green">协调博弈</span></div>
+    <div class="card-insight">双方都想在一起，但对地点有不同偏好。关键不在"去哪"，而在"如何协调"。</div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <tr><th></th><th>对方选足球</th><th>对方选歌剧</th></tr>
+        <tr><th>我选足球</th><td class="nash">3, 2 &#9733;</td><td>0, 0</td></tr>
+        <tr><th>我选歌剧</th><td>0, 0</td><td class="nash">2, 3 &#9733;</td></tr>
+      </table>
+    </div>
+    <div class="card-example">
+      <strong>例：</strong>技术选型时，前端团队偏好 React，后端团队偏好 Vue 的 SSR 方案。两个团队用同一个框架比各用各的好，但选谁的方案就有了协调问题。通常由技术负责人的"焦点"来打破僵局。
+    </div>
+  </div>
+
+  <!-- Matching Pennies -->
+  <div class="card">
+    <div class="card-title">匹配硬币</div>
+    <div class="card-en">Matching Pennies &nbsp;<span class="tag tag-blue">同时博弈</span><span class="tag tag-pink">零和博弈</span></div>
+    <div class="card-insight">纯零和博弈，一方要匹配另一方要不匹配。没有纯策略纳什均衡，只有各 50% 的混合策略均衡。</div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <tr><th></th><th>对方正面</th><th>对方反面</th></tr>
+        <tr><th>我正面</th><td>+1, -1</td><td>-1, +1</td></tr>
+        <tr><th>我反面</th><td>-1, +1</td><td>+1, -1</td></tr>
+      </table>
+    </div>
+    <div class="card-example">
+      <strong>例：</strong>足球点球大战。守门员猜扑左/右，射手选踢左/右。如果射手总踢右边，守门员就总扑右边，所以最优策略是随机化。统计数据显示顶级球员的射门方向确实接近 50/50。
+    </div>
+  </div>
+
+  <!-- Ultimatum Game -->
+  <div class="card">
+    <div class="card-title">最后通牒博弈</div>
+    <div class="card-en">Ultimatum Game &nbsp;<span class="tag tag-amber">序贯博弈</span><span class="tag tag-pink">行为经济学</span></div>
+    <div class="card-insight">理性预测：提议者只给 1 元，回应者也会接受（1 > 0）。但实验中，低于 30% 的提议常被拒绝 &mdash; 人们宁可双方都得零，也不接受"不公平"。</div>
+    <div class="card-example">
+      <strong>例：</strong>分 100 元。老板说"我拿 95，你拿 5"，虽然 5 > 0，但你可能愤而拒绝。这解释了为什么谈判中即使一方完全掌控局面，也要给对方"有面子"的方案 &mdash; 否则对方宁可掀桌。
+    </div>
+  </div>
+
+  <!-- Dictator Game -->
+  <div class="card">
+    <div class="card-title">独裁者博弈</div>
+    <div class="card-en">Dictator Game &nbsp;<span class="tag tag-amber">序贯博弈</span><span class="tag tag-pink">行为经济学</span></div>
+    <div class="card-insight">一方单方面决定怎么分，另一方无法拒绝。理性预测给 0，但实验中平均给出 20-30% &mdash; 纯粹的利他行为确实存在。</div>
+    <div class="card-example">
+      <strong>例：</strong>匿名捐款箱。没有人知道你捐了多少，没有社交压力，也没有税收抵扣。理性人应该一分不捐，但大多数人还是会放点进去。这就是独裁者博弈测量的"纯利他偏好"。
+    </div>
+  </div>
+
+  <!-- Centipede Game -->
+  <div class="card">
+    <div class="card-title">蜈蚣博弈</div>
+    <div class="card-en">Centipede Game &nbsp;<span class="tag tag-amber">序贯博弈</span><span class="tag tag-purple">逆向归纳</span></div>
+    <div class="card-insight">奖池每轮翻倍，但轮到你时可以独吞。逆向归纳预测第一步就结束（拿 1 元），但实验中人们通常会合作到接近末尾。</div>
+    <div class="card-example">
+      <strong>例：</strong>两人轮流往桌上放 1 元，任何一方可以随时拿走桌上所有钱。如果共 10 轮，逆向归纳说第 1 轮就该拿。但现实中投资人之间的多轮合作常常能持续很久 &mdash; 因为"继续合作"的信号价值超过了短期收益。
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ CORE CONCEPTS ============ -->
+<h2 id="core"><span class="icon">&#9881;</span> 核心概念</h2>
+
+<div class="card-grid">
+
+  <div class="card">
+    <div class="card-title">纳什均衡</div>
+    <div class="card-en">Nash Equilibrium &nbsp;<span class="tag tag-blue">均衡概念</span></div>
+    <div class="card-insight">所有玩家的策略组合中，没有任何一个玩家能通过单方面改变自己的策略而获得更好的结果。"稳定状态"&mdash; 没人有动力偏离。</div>
+    <div class="card-example">
+      <strong>例：</strong>早高峰时两条路线都堵 40 分钟。虽然都不爽，但没人能通过换路线变快 &mdash; 这就是纳什均衡。如果突然一条路只要 20 分钟，人们会切换过去直到两边又一样堵。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">占优策略</div>
+    <div class="card-en">Dominant Strategy &nbsp;<span class="tag tag-blue">策略概念</span></div>
+    <div class="card-insight">不管对手怎么做，这个策略的收益都不低于其他任何策略。如果存在，决策极其简单 &mdash; 闭着眼选它就对了。</div>
+    <div class="card-example">
+      <strong>例：</strong>疫苗接种。不管别人打不打，打疫苗对你都比不打好（要么免疫，要么降低重症）。所以"打疫苗"是占优策略。但如果所有人都不打，群体免疫就无法建立 &mdash; 这就引出了公共博弈的问题。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">帕累托最优</div>
+    <div class="card-en">Pareto Optimality &nbsp;<span class="tag tag-green">效率概念</span></div>
+    <div class="card-insight">没有办法让任何人更好而不让至少一个人更差。注意：帕累托最优 &ne; 公平，"你拿 100 我拿 0"也是帕累托最优。</div>
+    <div class="card-example">
+      <strong>例：</strong>分蛋糕时，只要没有蛋糕剩余浪费掉，任何分法都是帕累托最优（包括一个人拿走全部）。囚徒困境中"双方都背叛"不是帕累托最优，因为"双方都合作"可以让两人都更好。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">混合策略</div>
+    <div class="card-en">Mixed Strategy &nbsp;<span class="tag tag-blue">策略概念</span></div>
+    <div class="card-insight">以特定概率随机选择不同的纯策略，使对手无法预判你的行动。纳什定理保证：有限博弈至少存在一个（可能是混合的）纳什均衡。</div>
+    <div class="card-example">
+      <strong>例：</strong>石头剪刀布。如果你总出石头，对手永远出布。纳什均衡是各 1/3 概率随机出。有趣的是，人类其实做不到真正随机 &mdash; 研究发现人们在赢了之后倾向重复上次的选择。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">逆向归纳</div>
+    <div class="card-en">Backward Induction &nbsp;<span class="tag tag-purple">求解方法</span></div>
+    <div class="card-insight">从博弈的最后一步开始分析，确定最后一个决策者的最优选择，然后倒推到前一步，依次类推直到第一步。序贯博弈的标准求解方法。</div>
+    <div class="card-example">
+      <strong>例：</strong>国际象棋。虽然不可能算完所有分支，但残局中（比如只剩王和车 vs 王），从"将杀"的终局状态倒推，可以精确算出每一步最优走法。AI 的极小化极大搜索就是逆向归纳的计算实现。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">子博弈完美均衡</div>
+    <div class="card-en">Subgame Perfect Equilibrium &nbsp;<span class="tag tag-blue">均衡概念</span></div>
+    <div class="card-insight">纳什均衡的精炼版。要求在博弈的每个决策节点上（不只是开头），玩家的策略都是最优的。排除了"不可信的威胁"。</div>
+    <div class="card-example">
+      <strong>例：</strong>父母威胁孩子"再哭我就把玩具扔了"。孩子知道父母不会真的扔（成本太高），所以这个威胁不可信。子博弈完美均衡要求在"孩子真的哭了"这个子博弈中，父母的行动也得是最优的。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">机制设计</div>
+    <div class="card-en">Mechanism Design &nbsp;<span class="tag tag-pink">设计理论</span></div>
+    <div class="card-insight">博弈论的"逆问题"：不是分析给定规则下的均衡，而是设计规则，使得自利的参与者在均衡中恰好做出你想要的事情。</div>
+    <div class="card-example">
+      <strong>例：</strong>Vickrey 拍卖（密封第二价格拍卖）。每人写下出价密封提交，最高者赢但只付第二高的价格。在这个规则下，"报真实估值"成了占优策略 &mdash; 你不需要猜别人出多少，如实报价永远最优。eBay 的代理出价系统就用了这个原理。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">信号博弈</div>
+    <div class="card-en">Signaling Game &nbsp;<span class="tag tag-pink">信息经济学</span></div>
+    <div class="card-insight">信息不对称时，拥有私有信息的一方通过可观察的行动来传递（或隐藏）信息。关键条件：信号必须是"高成本伪造"的才可信。</div>
+    <div class="card-example">
+      <strong>例：</strong>Spence 的教育信号理论。名校文凭本身未必让你更能干，但它是一个信号：能扛过高考/申请/四年课程的人，大概率学习能力强。信号有效是因为"能力弱的人模仿这个信号的成本太高"。这就是为什么企业愿意为名校学历付溢价。
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ THEOREMS ============ -->
+<h2 id="theorems"><span class="icon">&#9733;</span> 经典定理与悖论</h2>
+
+<div class="theorem-list">
+
+  <div class="theorem">
+    <div class="theorem-name">纳什存在性定理 Nash Existence Theorem (1950)</div>
+    <div class="theorem-content">任何有限博弈（有限个玩家、有限个策略）至少存在一个纳什均衡（可能是混合策略均衡）。</div>
+    <div class="theorem-example">
+      <strong>例：</strong>石头剪刀布没有纯策略均衡，但纳什定理保证了混合策略均衡的存在 &mdash; 各 1/3 概率。这个定理告诉我们：任何博弈都有"稳定解"，只是可能需要随机化。
+    </div>
+  </div>
+
+  <div class="theorem">
+    <div class="theorem-name">Folk 定理 Folk Theorem</div>
+    <div class="theorem-content">在无限次重复博弈中，如果玩家足够有耐心（贴现因子足够大），那么几乎任何"个体理性"的收益组合都可以通过某个纳什均衡来维持。</div>
+    <div class="theorem-example">
+      <strong>例：</strong>两家加油站天天面对面竞争（无限重复的囚徒困境）。虽然单次博弈应该打价格战，但因为"明天还要竞争"，双方可以维持高价默契 &mdash; 谁先降价，对方明天就报复。这解释了为什么同一路口的加油站价格常常一模一样。
+    </div>
+  </div>
+
+  <div class="theorem">
+    <div class="theorem-name">Braess 悖论 Braess's Paradox (1968)</div>
+    <div class="theorem-content">在网络博弈中，增加一条新路径（或新资源）可能导致所有人的结果都变差，因为纳什均衡的效率下降了。</div>
+    <div class="theorem-example">
+      <strong>例：</strong>首尔 2003 年拆除了清溪高架路，交通反而变好了。原因：高架路让太多车涌入市中心（纳什均衡偏移），拆了之后车辆分散到其他路线，整体流量更优。纽约 42 街也有类似的封路实验。
+    </div>
+  </div>
+
+  <div class="theorem">
+    <div class="theorem-name">Arrow 不可能定理 Arrow's Impossibility Theorem (1951)</div>
+    <div class="theorem-content">不存在同时满足以下条件的投票规则：非独裁、帕累托效率、无关选项独立性。任何合理的投票制度都无法完美聚合个人偏好。</div>
+    <div class="theorem-example">
+      <strong>例：</strong>三个人投票选午餐。A 偏好：火锅 > 烧烤 > 西餐；B：烧烤 > 西餐 > 火锅；C：西餐 > 火锅 > 烧烤。用不同的投票规则会得出不同的赢家 &mdash; 这不是规则设计得不好，而是 Arrow 证明了任何规则都有缺陷。
+    </div>
+  </div>
+
+  <div class="theorem">
+    <div class="theorem-name">Gibbard-Satterthwaite 定理 (1973)</div>
+    <div class="theorem-content">在三个或更多候选人的选举中，任何非独裁的投票机制都可能被策略性操纵 &mdash; 即存在选民通过不如实投票来获得更好结果的情形。</div>
+    <div class="theorem-example">
+      <strong>例：</strong>你真实偏好是 A > B > C，但民调显示 A 没希望赢。为了不让最讨厌的 C 当选，你投给了 B &mdash; 这就是策略性投票。G-S 定理说这种操纵可能性无法被任何规则消除（除非独裁）。美国两党制下的"有效票"心理就是这个定理的现实体现。
+    </div>
+  </div>
+
+  <div class="theorem">
+    <div class="theorem-name">揭示原理 Revelation Principle</div>
+    <div class="theorem-content">任何可以通过某个机制实现的均衡结果，都可以通过一个"直接揭示机制"实现 &mdash; 即让参与者直接报告真实私有信息，机制保证如实报告是最优策略。</div>
+    <div class="theorem-example">
+      <strong>例：</strong>政府想按企业真实排污量收费，但企业会低报。揭示原理说：一定存在一种收费规则，让如实上报成为企业的最优选择。Vickrey-Clarke-Groves 机制就是一个具体实现 &mdash; 你的税额取决于你对别人造成的"外部性"，而非你的报告本身。
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  concept_study / Game Theory &mdash; generated with Claude
+</footer>
+
+</body>
+</html>
